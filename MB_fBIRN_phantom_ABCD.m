@@ -1,4 +1,4 @@
-function fBIRN_phantom_ABCD(vol4D, meta, output)
+function MB_fBIRN_phantom_ABCD(vol4D, meta, output)
 
 %   This code is adapted from Gary Glover fBIRN phantom qa.m matlab code
 %   http://www.birncommunity.org/tools-catalog/function-birn-stability-phantom-qa-procedures/
@@ -27,7 +27,7 @@ vol_dims = size(vol4D);
 NPIX = vol_dims(1);
 
 
-vol4D = vol4D(:,:,:,3:end); % Skip two first volumes
+vol4D = vol4D(:,:,:,5:end); %Skip four first volumes for multiband
 
     
 selectedSlice = ceil(size(vol4D,3)/2);
@@ -132,7 +132,6 @@ varI = var(sub(:));         %Variance of Isub within ROI only
 
 figure
 imagesc(img/(fix(N/2))); 
-colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Idiff_noise.tif';
@@ -151,7 +150,6 @@ meanI = mean(sub(:));       %Mean of Iave within ROI
 
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
-colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Iave.tif';
@@ -177,7 +175,6 @@ img(:) = Isd;
 
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
-colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Isd.tif';
@@ -196,7 +193,6 @@ sfnrI = mean(sub(:));         %mean sfnr value within ROI
 % print as 10*sfnr if you want. Not now
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
-colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'sfnr.tif';
@@ -307,13 +303,6 @@ close;
 resultFile = 'Phantom_QC.json';
 file = fullfile(path, resultFile);
 
-%data2json=struct('mean',meanI,'sd',sd,'snr',snr,'sfnr',sfnrI,'rms',100*sd/m,'temp_drift',100*drift,...
- %             'max_temp_drift',100*maxabsdrift,'rdc',rdc,'mean_ghost',mean_ghost,'top_ghost',top_ghost,...
-  %            'spatial_drift_relx', spatial_drift.max_sdx, 'spatial_drift_rely', spatial_drift.max_sdy,...
-   %           'spatial_drift_relz', spatial_drift.max_sdz,'image_frequency', imageFreq,'transmit_gain',...
-    %          gains(1),'receiver_gain', gains(2));
-
-
 qc_metrics=struct('mean',meanI,'sd',sd,'snr',snr,'sfnr',sfnrI,'rms',100*sd/m,'temp_drift',100*drift,...
           'max_temp_drift',100*maxabsdrift,'rdc',rdc,'mean_ghost',mean_ghost,'top_ghost',top_ghost,...
           'spatial_drift_pe', spatial_drift.max_sdy,'image_frequency', imageFreq,'transmit_gain',...
@@ -325,7 +314,6 @@ series_info=struct('StudyTime', meta.s_time, 'StudyDate', meta.s_date, 'StudyIns
 data2json=struct('QA_metrics', qc_metrics, 'SeriesInfo', series_info, 'version', version);       
           
 jsonfile = savejson('fBIRN_Phantom_QA',data2json,struct('FloatFormat','%.2f'));
-
 fileID = fopen(file,'w');
 fprintf(fileID, jsonfile);
 fclose(fileID);
@@ -384,12 +372,10 @@ x=(0:timepoints-1);
 x=x*step*(TR/60);
 x(end)=nFrames*TR/60;
 
-%plot(x,spatial_drift_relx,'-bo',x,spatial_drift_rely,'-ro',x,spatial_drift_relz,'-go');
-plot(x,spatial_drift_rely,'-ro');
+plot(x,spatial_drift_relx,'-bo',x,spatial_drift_rely,'-ro',x,spatial_drift_relz,'-go');
 xlabel('Time (minutes)');
 ylabel('Spatial Drift (mm)');
-%legend('relx(LR)','rely(PA)', 'relz(IS)','Location','northwest')
-legend('rely(PA)','Location','northwest')
+legend('relx(LR)','rely(PA)', 'relz(IS)','Location','northwest')
 grid
 
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
@@ -411,7 +397,11 @@ phantom_edges = imdilate(phantom_edges,nhood);
 phantom_mask = imfill(phantom_edges, 'holes');
 phantom_mask_dil = imdilate(phantom_mask,nhood);
 
-maskshift = [phantom_mask(fix(NPIX/2)+1:end,:); phantom_mask(1:fix(NPIX/2),:)];
+for i=1:size(phantom_mask,2)
+   if (any(phantom_mask(:,i)))
+       maskshift(:,i)=ones(size(phantom_mask,1),1);
+   end
+end
 
 ghostarea = maskshift & (~phantom_mask_dil);
 nhood = strel('disk',3,0);
