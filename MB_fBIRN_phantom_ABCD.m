@@ -132,6 +132,7 @@ varI = var(sub(:));         %Variance of Isub within ROI only
 
 figure
 imagesc(img/(fix(N/2))); 
+colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Idiff_noise.tif';
@@ -147,9 +148,10 @@ Iave = Sy/N;                %Iave in vector form
 img(:) = Iave;              %Iave in 2D form
 sub = img(X1:X2,Y1:Y2);     %Iave with ROI masked
 meanI = mean(sub(:));       %Mean of Iave within ROI
-
+colormap(gray);
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
+colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Iave.tif';
@@ -175,6 +177,7 @@ img(:) = Isd;
 
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
+colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'Isd.tif';
@@ -193,6 +196,7 @@ sfnrI = mean(sub(:));         %mean sfnr value within ROI
 % print as 10*sfnr if you want. Not now
 figure
 imagesc(img); % draw a simple figure containing a sine wave, title, etc.
+colormap(gray);
 colorbar;
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
 file = 'sfnr.tif';

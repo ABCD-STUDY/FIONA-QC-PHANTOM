@@ -22,7 +22,7 @@ end
 
 %================Read dicom files====================%
 
-[vol,meta] = read_files(input);
+[vol,meta] = read_files_phantom(input);
 
 %==============Calls fBIRN QA routine=================%
 
