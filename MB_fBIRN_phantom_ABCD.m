@@ -1,4 +1,4 @@
-function MB_fBIRN_phantom_ABCD(vol4D, meta, output)
+function MB_fBIRN_phantom_ABCD(vol4D, meta, output, fwhm)
 
 %   This code is adapted from Gary Glover fBIRN phantom qa.m matlab code
 %   http://www.birncommunity.org/tools-catalog/function-birn-stability-phantom-qa-procedures/
@@ -22,6 +22,7 @@ imageFreq = meta.imageFreq;
 gains = [meta.transmitGain, meta.aRecGain];
 
 path = output;
+   
 TR = tr/1000;
 vol_dims = size(vol4D);
 NPIX = vol_dims(1);
@@ -223,7 +224,8 @@ time_minutes = x*TR/60;
 
 m=mean(avg_signal_roi);
 sd=std(y);
-drift = ((yfit(N)-yfit(1))/m)/time_minutes(end); %Drift using trend line. Last intensity-initial divided by mean of trend line (averaged by minute)
+drift = ((yfit(N)-yfit(1))/m);
+drift_per_minute = ((yfit(N)-yfit(1))/m)/time_minutes(end); %Drift using trend line. Last intensity-initial divided by mean of trend line (averaged by minute)
 maxabsdrift = (max(avg_signal_roi) - min(avg_signal_roi))/m;
 
 figure
@@ -232,7 +234,7 @@ plot(time_minutes,avg_signal_roi,time_minutes,yfit);
 xlabel('Time (minutes)');
 ylabel('Raw signal');
 grid
-title(sprintf('mean = %5.1f // SNR = %5.1f // SFNR = %5.1f \n drift (%% of mean per minute) = %5.2f // max absolute drift (%% of mean) = %5.2f',  meanI, snr, sfnrI, 100*drift, 100*maxabsdrift));
+title(sprintf('mean = %5.1f // SNR = %5.1f // SFNR = %5.1f \n drift (%% of mean) = %5.2f // drift per minute (%% of mean per minute) = %5.2f \n max absolute drift (%% of mean) = %5.2f',  meanI, snr, sfnrI, 100*drift, 100*drift_per_minute, 100*maxabsdrift));
 
 subplot(2,1,2);
 plot(time_minutes,y);
@@ -304,15 +306,15 @@ close;
 
 [mean_ghost, top_ghost] = ghosting_metrics(data, NPIX, TR, path);
 
-resultFile = 'Phantom_QC.json';
+resultFile = 'QA_metrics.json';
 file = fullfile(path, resultFile);
 
-qc_metrics=struct('mean',meanI,'sd',sd,'snr',snr,'sfnr',sfnrI,'rms',100*sd/m,'temp_drift',100*drift,...
-          'max_temp_drift',100*maxabsdrift,'rdc',rdc,'mean_ghost',mean_ghost,'top_ghost',top_ghost,...
+qc_metrics=struct('mean',meanI,'sd',sd,'snr',snr,'sfnr',sfnrI,'rms',100*sd/m,'temp_drift',100*drift, 'temp_drift_per_minute', 100*drift_per_minute,...
+          'max_temp_drift',100*maxabsdrift,'rdc',rdc, 'FWHM_x', fwhm(1), 'FWHM_y', fwhm(2), 'FWHM_z', fwhm(3), 'mean_ghost',mean_ghost,'top_ghost',top_ghost,...
           'spatial_drift_pe', spatial_drift.max_sdy,'image_frequency', imageFreq,'transmit_gain',...
           gains(1),'receiver_gain', gains(2));
-series_info=struct('StudyTime', meta.s_time, 'StudyDate', meta.s_date, 'StudyInstanceUID', meta.si_UID,...,
-          'Manufacturer', meta.manufact, 'ManufacturerModelName', meta.model); 
+series_info=struct('Multiband', 1, 'RepetitionTime', meta.TR, 'EchoTime', meta.TE, 'FlipAngle', meta.FA, 'StudyTime', meta.s_time, 'StudyDate', meta.s_date, 'StudyInstanceUID', meta.si_UID,...,
+          'Manufacturer', meta.manufact, 'ManufacturerModelName', meta.model, 'Coil', meta.coil, 'SeriesDescription', meta.sDes); 
       
       
 data2json=struct('QA_metrics', qc_metrics, 'SeriesInfo', series_info, 'version', version);       
@@ -376,10 +378,12 @@ x=(0:timepoints-1);
 x=x*step*(TR/60);
 x(end)=nFrames*TR/60;
 
-plot(x,spatial_drift_relx,'-bo',x,spatial_drift_rely,'-ro',x,spatial_drift_relz,'-go');
+%plot(x,spatial_drift_relx,'-bo',x,spatial_drift_rely,'-ro',x,spatial_drift_relz,'-go');
+plot(x,spatial_drift_rely,'-ro');
 xlabel('Time (minutes)');
 ylabel('Spatial Drift (mm)');
-legend('relx(LR)','rely(PA)', 'relz(IS)','Location','northwest')
+%legend('relx(LR)','rely(PA)', 'relz(IS)','Location','northwest')
+legend('rely(PA)','Location','northwest')
 grid
 
 set(gcf,'Visible','off','CreateFcn','set(gcf,''Visible'',''on'')'); % this disables the figure and set the 'CreateFcn' property simultaneously
