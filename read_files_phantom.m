@@ -30,6 +30,12 @@ end
 end    
 
 function [meta]=read_siemens_phantom(input,filelist)
+osLevel = '';
+json_fname = strcat(input,'.json');
+if exist(json_fname,'file') 
+    json_data=loadjson(json_fname);
+    if isfield(json_data,'OSLevel'), osLevel = json_data.OSLevel; end   
+end
 
 fullfilename = fullfile(input,filelist(1).name);
 if file_is_dicom(fullfilename)
@@ -55,10 +61,15 @@ if file_is_dicom(fullfilename)
     s_date = info.StudyDate;
     s_time = info.StudyTime;
     si_UID = info.StudyInstanceUID;
+    se_time = info.SeriesTime;
+    se_number = info.SeriesNumber; 
     manufact = info.Manufacturer;
     model = info.ManufacturerModelName;
     sDes = info.SeriesDescription;
     
+    if (isfield(info,'DeviceSerialNumber')) serialNumber = info.DeviceSerialNumber; else serialNumber=''; end;   
+    if (isfield(info,'SoftwareVersion')) softVersion = info.SoftwareVersion; else softVersion=''; end;
+    if (isfield(info,'ImageComments')) imComments = info.ImageComments; else imComments=''; end;
     
     if (isfield(info, 'Private_0051_100f'))
         coilTypes = info.Private_0051_100f;
@@ -78,12 +89,18 @@ else
 end
 
 meta = struct('TR',TR, 'FA',FA, 'TE', TE, 'imageFreq', imageFreq, 'transmitGain', transmitGain, 'aRecGain', aRecGain, 'sx', sx, 'sy', sy, 'sz', sz,...,
-    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil);
+    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'se_time', se_time, 'se_number', se_number, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil,...,
+    'serialNumber', serialNumber, 'softVersion', softVersion, 'osLevel', osLevel, 'imComments', imComments);
 end
 
 
 function [meta]=read_ge_phantom(input,filelist)
-
+osLevel = '';
+json_fname = strcat(input,'.json');
+if exist(json_fname,'file') 
+    json_data=loadjson(json_fname);
+    if isfield(json_data,'OSLevel'), osLevel = json_data.OSLevel; end   
+end
 fullfilename = fullfile(input,filelist(1).name);
 if(file_is_dicom(fullfilename))
     info=dicominfo(fullfilename);
@@ -114,10 +131,16 @@ if(file_is_dicom(fullfilename))
     s_date = info.StudyDate;
     s_time = info.StudyTime;
     si_UID = info.StudyInstanceUID;
+    se_time = info.SeriesTime;
+    se_number = info.SeriesNumber; 
     manufact = info.Manufacturer;
     model = info.ManufacturerModelName;
     sDes = info.SeriesDescription;
     
+    if (isfield(info,'DeviceSerialNumber')) serialNumber = info.DeviceSerialNumber; else serialNumber=''; end;   
+    if (isfield(info,'SoftwareVersion')) softVersion = info.SoftwareVersion; else softVersion=''; end;
+    if (isfield(info,'ImageComments')) imComments = info.ImageComments; else imComments=''; end;
+       
     if (isfield(info, 'ReceiveCoilName'))
         coil = info.ReceiveCoilName;
     else
@@ -129,14 +152,20 @@ else
     return;
 end
 
-meta = struct('TR',TR, 'FA', FA, 'TE', TE, 'imageFreq', imageFreq, 'transmitGain', transmitGain, 'aRecGain', aRecGain, 'sx', sx, 'sy', sy, 'sz', sz,...,
-    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil);
+meta = struct('TR',TR, 'FA',FA, 'TE', TE, 'imageFreq', imageFreq, 'transmitGain', transmitGain, 'aRecGain', aRecGain, 'sx', sx, 'sy', sy, 'sz', sz,...,
+    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'se_time', se_time, 'se_number', se_number, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil,...,
+    'serialNumber', serialNumber, 'softVersion', softVersion, 'osLevel', osLevel, 'imComments', imComments);
 
 end
 
 
 function [meta]=read_philips_phantom(input,filelist)
-
+osLevel = '';
+json_fname = strcat(input,'.json');
+if exist(json_fname,'file') 
+    json_data=loadjson(json_fname);
+    if isfield(json_data,'OSLevel'), osLevel = json_data.OSLevel; end   
+end
 fullfilename = fullfile(input,filelist(1).name);
 if(file_is_dicom(fullfilename))
     info=dicominfo(fullfilename);
@@ -162,9 +191,15 @@ if(file_is_dicom(fullfilename))
     s_date = info.StudyDate;
     s_time = info.StudyTime;
     si_UID = info.StudyInstanceUID;
+    se_time = info.SeriesTime;
+    se_number = info.SeriesNumber; 
     manufact = info.Manufacturer;
     model = info.ManufacturerModelName;
     sDes = info.SeriesDescription;
+
+    if (isfield(info,'DeviceSerialNumber')) serialNumber = info.DeviceSerialNumber; else serialNumber=''; end;   
+    if (isfield(info,'SoftwareVersion')) softVersion = info.SoftwareVersion; else softVersion=''; end;
+    if (isfield(info,'ImageComments')) imComments = info.ImageComments; else imComments=''; end;
     
     if (isfield(info, 'ReceiveCoilName'))
         coil = info.ReceiveCoilName;
@@ -178,8 +213,8 @@ else
 end
 
 meta = struct('TR',TR, 'FA',FA, 'TE', TE, 'imageFreq', imageFreq, 'transmitGain', transmitGain, 'aRecGain', aRecGain, 'sx', sx, 'sy', sy, 'sz', sz,...,
-    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil);
-
+    's_date', s_date, 's_time', s_time, 'si_UID', si_UID, 'se_time', se_time, 'se_number', se_number, 'manufact', manufact, 'model', model, 'sDes', sDes, 'coil', coil,...,
+    'serialNumber', serialNumber, 'softVersion', softVersion, 'osLevel', osLevel, 'imComments', imComments);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,14 +229,17 @@ while (~file_is_dicom(fullfilename)) && (i<length(filelist))
     fullfilename = fullfile(input,filelist(i).name);
 end
 
-if any(strfind(meta.manufact, 'SIEMENS'))
-    cmd = sprintf('mri_convert -it siemens_dicom -ot nii %s %s/original_vol.nii', fullfilename, output);
-else
-    cmd = sprintf('mri_convert -it dicom -ot nii %s %s/original_vol.nii', fullfilename, output);
-end
-unix(cmd);
-
 fname=fullfile(output,'original_vol.nii');
+
+if ~exist(fname, 'file')
+    if any(strfind(meta.manufact, 'SIEMENS'))
+        cmd = sprintf('mri_convert -it siemens_dicom -ot nii %s %s/original_vol.nii', fullfilename, output);
+    else
+        cmd = sprintf('mri_convert -it dicom -ot nii %s %s/original_vol.nii', fullfilename, output);
+    end
+    unix(cmd);
+end
+
 nifti_image = load_nii(fname);
 vol4D = rot90(flip(double(nifti_image.img),1),3);
 

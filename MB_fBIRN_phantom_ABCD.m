@@ -313,13 +313,14 @@ qc_metrics=struct('mean',meanI,'sd',sd,'snr',snr,'sfnr',sfnrI,'rms',100*sd/m,'te
           'max_temp_drift',100*maxabsdrift,'rdc',rdc, 'FWHM_x', fwhm(1), 'FWHM_y', fwhm(2), 'FWHM_z', fwhm(3), 'mean_ghost',mean_ghost,'top_ghost',top_ghost,...
           'spatial_drift_pe', spatial_drift.max_sdy,'image_frequency', imageFreq,'transmit_gain',...
           gains(1),'receiver_gain', gains(2));
-series_info=struct('Multiband', 1, 'RepetitionTime', meta.TR, 'EchoTime', meta.TE, 'FlipAngle', meta.FA, 'StudyTime', meta.s_time, 'StudyDate', meta.s_date, 'StudyInstanceUID', meta.si_UID,...,
-          'Manufacturer', meta.manufact, 'ManufacturerModelName', meta.model, 'Coil', meta.coil, 'SeriesDescription', meta.sDes); 
+series_info=struct('Multiband', 0, 'RepetitionTime', meta.TR, 'EchoTime', meta.TE, 'FlipAngle', meta.FA, 'StudyTime', meta.s_time, 'StudyDate', meta.s_date, 'StudyInstanceUID', meta.si_UID,...,
+          'Manufacturer', meta.manufact, 'ManufacturerModelName', meta.model, 'Coil', meta.coil, 'SeriesDescription', meta.sDes, 'SeriesNumber', meta.se_number, 'SeriesTime', meta.se_time,...,
+          'ScannerSerialNumber', meta.serialNumber, 'OperatingSystemVersion', meta.softVersion, 'OSLevel', meta.osLevel, 'ImageComments', meta.imComments);
       
       
 data2json=struct('QA_metrics', qc_metrics, 'SeriesInfo', series_info, 'version', version);       
           
-jsonfile = savejson('fBIRN_Phantom_QA',data2json,struct('FloatFormat','%.2f'));
+jsonfile = savejson('fBIRN_Phantom_QA',data2json,struct('FloatFormat','%.3f'));
 fileID = fopen(file,'w');
 fprintf(fileID, jsonfile);
 fclose(fileID);
